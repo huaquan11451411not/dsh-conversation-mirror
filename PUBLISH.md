@@ -68,6 +68,31 @@ npm view dsh-conversation-mirror version
 `publishConfig.registry` 已写死官方源，`publishConfig.access` 为 `public`。
 包名 `dsh-conversation-mirror` 在官方 registry 上尚未被占用（2026-11-25 查证）。
 
+**npm 现在强制发布走 2FA**，账号没开 2FA 时会直接 403：
+
+```
+403 Forbidden - PUT https://registry.npmjs.org/<pkg>
+Two-factor authentication or granular access token with bypass 2fa enabled is required to publish packages.
+```
+
+注意这个 403 **不是验证码提示**——registry 不发 `www-authenticate` 挑战头，所以
+`npm publish --otp=<code>` 在「账号还没开 2FA」时也不会生效，重试只会得到同样的错误。
+两条出路：
+
+1. **开 2FA**（推荐长期用）：npmjs.com → Account → Two-Factor Authentication，选包含
+   "writes" 的模式；之后 `npm publish` 会弹 6 位码，或用 `npm publish --otp=<code>`。
+2. **Granular Access Token + Bypass 2FA**（CI 或不装验证器 App 时）：npmjs.com → Access Tokens
+   → Generate New Token → **Granular**，权限选 Read and write，勾上
+   **"Bypass two-factor authentication for this token"**，然后：
+
+   ```bash
+   npm publish --//registry.npmjs.org/:_authToken=npm_xxxxxxxx
+   ```
+
+   注意 npm 已公告收紧 bypass 2FA token：账号类操作自 2026-08 起、直接发布自 2027-01 起
+   不再支持，长期仍建议改用 2FA 或 Trusted Publishing（OIDC）。
+   token 只显示一次，用完立刻在网页上 revoke，别写进仓库或全局 `.npmrc`。
+
 ## 4. 上架插件市场（awesome-dsh-plugin）
 
 市场（dsh-market / Discover）每次打开时读取 `https://awesome-dsh-plugin.com/plugins.json`，
