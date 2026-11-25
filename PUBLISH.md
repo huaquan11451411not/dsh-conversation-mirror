@@ -93,6 +93,27 @@ Two-factor authentication or granular access token with bypass 2fa enabled is re
    不再支持，长期仍建议改用 2FA 或 Trusted Publishing（OIDC）。
    token 只显示一次，用完立刻在网页上 revoke，别写进仓库或全局 `.npmrc`。
 
+### 3.1 新包首发会被 npm 自动"分阶段发布"（staged publishing）
+
+从 npm 11.6 起，**从未发布过的新包名**第一次 `npm publish` 会先落一个公开的占位版本
+`0.0.0-stage`（描述是 "Temporary package placeholder for staged publishing"），真正的
+版本进入待批准队列。看到占位版本**不要**以为发布失败：
+
+- registry 文档里 `versions` 只有 `0.0.0-stage` 时，真版本可能还在上传或等审批；
+- `npm view` 有缓存，几十秒内可能一直返回旧数据 —— 用
+  `npm view <name> versions --prefer-online`，或直接读
+  `https://registry.npmjs.org/<name>?t=<unix毫秒>` 复核；
+- 真版本上线后可执行 `npm deprecate <name>@0.0.0-stage "placeholder"` 把占位标记掉（要 2FA）。
+
+CLI ≥ 11.15 可以直接操作队列：
+
+```bash
+npm stage list   --registry=https://registry.npmjs.org/   # 待批准队列
+npm stage approve <stage-id>                              # 批准（要 2FA）
+```
+
+npm 11.13 及更早没有 `npm stage` 子命令，只能等 `npm publish` 走完或到网页上批准。
+
 ## 4. 上架插件市场（awesome-dsh-plugin）
 
 市场（dsh-market / Discover）每次打开时读取 `https://awesome-dsh-plugin.com/plugins.json`，

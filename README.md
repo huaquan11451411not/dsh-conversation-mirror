@@ -3,6 +3,19 @@
 每轮对话结束时，把该会话的完整日志重写成一份中文 Markdown，落到你指定的目录。替代早期那套
 `mirror.ps1` + 启动文件夹快捷方式 + 20 秒轮询 + 按 zstd 帧魔数切帧解压的做法。
 
+## 安装
+
+```sh
+# 从 npm（推荐，需要 npm 11 以上）
+dsh plugin --profile <你的 profile> add dsh-conversation-mirror
+
+# 直接从 GitHub 源码
+dsh plugin --profile <你的 profile> add github:huaquan11451411not/dsh-conversation-mirror
+```
+
+装完在 DSH 的插件页能看到「会话镜像 / Conversation mirror」；默认产物落在
+`<用户目录>/dsh-conversations/`。
+
 ## 它做什么
 
 - 监听 Host 的 `session/event`，只在 `turn/end` 时触发（不轮询、不扫盘）。
