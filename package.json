@@ -1,0 +1,54 @@
+{
+  "name": "dsh-conversation-mirror",
+  "version": "0.1.0",
+  "description": "每轮对话结束后，把该会话导出成可读的中文 Markdown 并镜像到本地目录。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "assets/icon-180.png",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "transcript",
+    "markdown",
+    "export",
+    "session"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huaquan11451411not/dsh-conversation-mirror.git"
+  },
+  "homepage": "https://github.com/huaquan11451411not/dsh-conversation-mirror#readme",
+  "bugs": {
+    "url": "https://github.com/huaquan11451411not/dsh-conversation-mirror/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+# dsh-conversation-mirror bundle：向 profile 注入一个 Host 行。
+# 每一轮对话结束（turn/end）后，把该会话整篇重写成 Markdown 落到 dir 下。
+# 由 `plugin_manager install_bundle` 安装时生效，不需要手改 profile 的 cordis.patch.yml。
+- insert:
+    - id: conversation-mirror
+      name: 'dsh-conversation-mirror'
+      config:
+        # 镜像根目录。留空则落到「用户主目录/dsh-conversations」。
+        # 若自定义，必须是绝对路径且不能是盘符根目录；插件会拒绝越界写入。
+        # dir: 'D:\dsh-conversations'
+        # 产出物：md = sessions\<session-id>.md + latest.md；jsonl = 额外存一份解码后的事件流。
+        formats: ['md']
+        # 单个工具结果保留的字符数，超出部分截断并标注。
+        maxToolResult: 2000
+        # 同一会话的连续 turn/end 合并写入的等待毫秒数。
+        debounceMs: 1500
+        # 是否把本次导出的内容同时写成 latest.md。
+        latest: true

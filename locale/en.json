@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Conversation mirror",
+    "description": "Rewrite each session as Markdown into a folder you choose after every turn ends.",
+    "detail": "README.md"
+  }
+}
