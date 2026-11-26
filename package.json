@@ -1,6 +1,6 @@
 {
   "name": "dsh-conversation-mirror",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "每轮对话结束后，把该会话导出成可读的中文 Markdown 并镜像到本地目录。",
   "type": "module",
   "main": "lib/index.js",

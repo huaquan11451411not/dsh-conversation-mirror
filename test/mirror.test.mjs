@@ -5,6 +5,7 @@ import path from 'node:path'
 import test from 'node:test'
 
 import { apply } from '../lib/index.js'
+import { compileRedactRules, redactText } from '../lib/redact.js'
 import { renderSessionMarkdown } from '../lib/render.js'
 import {
   ensureDirInside,
@@ -316,4 +317,79 @@ test('配置非法时停用并只记一条 warning', () => {
   ctx.emit('session/event', { id: SESSION_ID }, { type: 'turn/end' })
   assert.equal(ctx.warnings.length, 1)
   assert.match(ctx.warnings[0], /未启用/u)
+})
+
+const NPM_TOKEN = `npm_${'A'.repeat(36)}`
+const GH_TOKEN = `ghp_${'B'.repeat(36)}`
+
+/** 把用户消息换成一段含凭证的文本。 */
+function eventsWithSecret(secret) {
+  return sampleEvents().map((event) => event.type === 'user/message'
+    ? { ...event, data: { ...event.data, content: [{ type: 'text', text: `这是我的令牌 ${secret} 别外传` }] } }
+    : event)
+}
+
+test('脱敏：默认抹掉常见凭证，保留周围文案', () => {
+  const markdown = renderSessionMarkdown(eventsWithSecret(NPM_TOKEN), {
+    sessionId: SESSION_ID,
+    redactRules: compileRedactRules().rules,
+  })
+  assert.ok(!markdown.includes(NPM_TOKEN), 'NPM token 不应出现在导出里')
+  assert.match(markdown, /\[redacted:npm-token\]/u)
+  assert.match(markdown, /这是我的令牌 .* 别外传/u, '周围文案应保留')
+  const gh = renderSessionMarkdown(eventsWithSecret(GH_TOKEN), {
+    sessionId: SESSION_ID,
+    redactRules: compileRedactRules().rules,
+  })
+  assert.ok(!gh.includes(GH_TOKEN))
+  assert.match(gh, /\[redacted:github-token\]/u)
+})
+
+test('脱敏：redactText 不改动普通文本，也不漏抹多处凭证', () => {
+  const rules = compileRedactRules().rules
+  assert.equal(redactText('磁盘还剩 61.7 GB，没有 token。', rules), '磁盘还剩 61.7 GB，没有 token。')
+  const two = `a ${NPM_TOKEN} b ${GH_TOKEN} c`
+  const out = redactText(two, rules)
+  assert.ok(!out.includes(NPM_TOKEN) && !out.includes(GH_TOKEN))
+  assert.equal(out.match(/\[redacted:/gu)?.length, 2)
+})
+
+test('端到端：自定义 redactPatterns 生效', async () => {
+  const root = resolveRoot(tempRoot())
+  const snapshot = { session: { id: SESSION_ID, cwd: 'C:\\work' }, events: eventsWithSecret('SECRET-1234') }
+  const ctx = fakeContext(snapshot)
+  apply(ctx, { dir: root, redactPatterns: ['SECRET-[0-9]{4}'], debounceMs: 10 })
+  ctx.emit('session/event', { id: SESSION_ID }, { type: 'turn/end' })
+  await sleep(120)
+  const markdown = fs.readFileSync(path.join(root, 'sessions', `${SESSION_ID}.md`), 'utf8')
+  assert.ok(!markdown.includes('SECRET-1234'), '自定义规则应生效')
+  assert.match(markdown, /\[redacted:custom-1\]/u)
+  assert.equal(ctx.warnings.length, 0)
+  ctx.dispose()
+})
+
+test('端到端：redact: false 时保留原文（自己承担风险）', async () => {
+  const root = resolveRoot(tempRoot())
+  const snapshot = { session: { id: SESSION_ID, cwd: 'C:\\work' }, events: eventsWithSecret(NPM_TOKEN) }
+  const ctx = fakeContext(snapshot)
+  apply(ctx, { dir: root, redact: false, debounceMs: 10 })
+  ctx.emit('session/event', { id: SESSION_ID }, { type: 'turn/end' })
+  await sleep(120)
+  const markdown = fs.readFileSync(path.join(root, 'sessions', `${SESSION_ID}.md`), 'utf8')
+  assert.ok(markdown.includes(NPM_TOKEN), '关掉脱敏后应保留原文')
+  ctx.dispose()
+})
+
+test('脱敏：非法正则只记 warning，不影响其余规则与写盘', async () => {
+  const root = resolveRoot(tempRoot())
+  const snapshot = { session: { id: SESSION_ID, cwd: 'C:\\work' }, events: eventsWithSecret(NPM_TOKEN) }
+  const ctx = fakeContext(snapshot)
+  apply(ctx, { dir: root, redactPatterns: ['('], debounceMs: 10 })
+  ctx.emit('session/event', { id: SESSION_ID }, { type: 'turn/end' })
+  await sleep(120)
+  assert.equal(ctx.warnings.length, 1)
+  assert.match(ctx.warnings[0], /不是合法正则/u)
+  const markdown = fs.readFileSync(path.join(root, 'sessions', `${SESSION_ID}.md`), 'utf8')
+  assert.ok(!markdown.includes(NPM_TOKEN), '内置规则仍应生效')
+  ctx.dispose()
 })

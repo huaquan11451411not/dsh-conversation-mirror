@@ -1,3 +1,9 @@
+# 0.1.1
+
+- 新增脱敏：写盘前抹掉常见凭证（`npm_`、`ghp_`/`github_pat_`、`sk-`、`xoxb-`、`AKIA`/`ASIA`、`AIza`），统一替换成 `[redacted:<规则名>]`。
+- 新增配置 `redact`（默认 `true`）与 `redactPatterns`（追加自定义正则，非法正则只记 warning 不抛错）。
+- `md` 与 `jsonl` 两种产物都会脱敏。
+
 # 0.1.0
 
 首个发布版本。

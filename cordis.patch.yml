@@ -16,3 +16,7 @@
         debounceMs: 1500
         # 是否把本次导出的内容同时写成 latest.md。
         latest: true
+        # 写盘前抹掉常见凭证（npm_/ghp_/sk-/xoxb-/AKIA/AIza…），默认开。
+        redact: true
+        # 追加自定义脱敏正则；内置规则始终生效。非法正则只记 warning。
+        redactPatterns: []
