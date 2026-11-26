@@ -1,3 +1,8 @@
+# 0.1.2
+
+与 0.1.1 功能完全相同；0.1.1 的发布在 npm 的暂存（staged publishing）环节被卡住，
+因此提升补丁号重新发布，确保 registry 上能取到带脱敏的版本。
+
 # 0.1.1
 
 - 新增脱敏：写盘前抹掉常见凭证（`npm_`、`ghp_`/`github_pat_`、`sk-`、`xoxb-`、`AKIA`/`ASIA`、`AIza`），统一替换成 `[redacted:<规则名>]`。
